@@ -49,9 +49,19 @@ class internal_data:
 
         lbl_stat['text'] = "Total: "+str(len(upd.data))+" solves (removed "+str(upd.dupl_cnt)+" duplicates)"
 
+        upd.dates = column(upd.data, 0)
+        upd.times = column(upd.data, 1)
+        upd.times = [np.nan if x=='DNF' else x for x in upd.times]        
+        upd.pb_sng = min(upd.times)
+        upd.min_idx = upd.times.index(upd.pb_sng)
+        upd.pb_date = upd.dates[upd.min_idx]
+
+        lbl_stat2['text'] = "PB: "+str(upd.pb_sng)+"s ("+upd.pb_date+")"
+
     def reset(rst):
         rst.data = []
         lbl_stat['text'] = "Total: 0 solves"
+        lbl_stat2['text'] = " "
         
 all_data = internal_data()
 
@@ -61,8 +71,6 @@ def cmd_exit():
 def cmd_reset():
     reset_chkboxes()
     lbl_importres['text'] = ""
-    #lbl_exportres['text'] = ""
-    #lbl_exportstatres['text'] = ""
     all_data.reset()
     
 def cmd_importcs():
@@ -274,17 +282,6 @@ def AoX(data, avg):
     return(data_aox)
 
 def add_avg(data):
-    index = 1
-    ao5 = ''
-    ao12 = ''
-    ao25 = ''
-    ao50 = ''
-    ao100 = ''
-    ao200 = ''
-    ao500 = ''
-    ao1000 = ''
-    ao2000 = ''
-
     if ao2000_chk.get()==True:
         data = AoX(data, 2000)
     if ao1000_chk.get()==True:
@@ -350,8 +347,6 @@ def cmd_exportstat():
         export_file_writer.writerow(row)
     export_file.close()
 
-    #lbl_exportstatres['text'] = str(len(export_data)-1) + " solves exported to CSV file"
-
     messagebox.showinfo("Success!", "Exported "+str(len(export_data)-1) + " solves to CSV file:\n"+export_filename)
 
 def format_time(time):
@@ -410,7 +405,6 @@ def cmd_exportcs():
         export_file_writer.writerow(row)
     export_file.close()
 
-    #lbl_exportres['text'] = str(len(export_csdata)) + " times exported to csTimer CSV file"
     messagebox.showinfo("Success!", "Exported "+str(len(cs_data)-1) + " solves to csTimer CSV file:\n"+export_filename)
 
 def cmd_exportnano():
@@ -444,7 +438,6 @@ def cmd_exportnano():
         export_file_writer.writerow(row)
     export_file.close()
 
-    #lbl_exportres['text'] = str(len(export_nanodata)) + " times exported to Nano Timer file"
     messagebox.showinfo("Success!", "Exported "+str(len(nano_data)-1) + " solves to Nano Timer CSV file:\n"+export_filename)
 
 def cmd_exporttwisty():
@@ -570,7 +563,6 @@ def display_graph():
     pb_lst = list()
     for x in pb_idx_lst:
         pb_lst.append(data_sng[x])
-    #print(pb_lst)
 
     fig, ax = plt.subplots()
 
@@ -589,26 +581,15 @@ def display_graph():
         data_x = data_x[::3]
     data_x = [''] + data_x + ['']
     
-    #print(data_x)
-    #print(len(data_x))
-    
     ax.set_xticks(range(len(data_x)))
     ax.set_xticklabels(data_x, rotation=90)
-    
-    #ax.xaxis_date()
-    #fig.autofmt_xdate()
-    #fig.align_xlabels()
 
     ax.yaxis.set_major_locator(ticker.MultipleLocator(10))
     ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
     ax.grid(which='major', axis='y')
     ax.grid(which='minor', axis='y', linestyle=':')
 
-    #plt.draw()
-    #plt.grid(which='both', axis='y')
     plt.legend()
-    #plt.xticks(np.arange(len(data_x)),data_x,rotation=90)
-    #plt.xticks(labels=data_x,rotation=90)
 
     ax.xaxis.set_major_locator(ticker.LinearLocator(len(data_x)))
         
@@ -673,9 +654,6 @@ btn_exportnano.grid(padx=5, pady=5)
 btn_exporttwisty = Button(master = frm_export, text = "Export Twisty Timer TXT", command = cmd_exporttwisty, width=btn_width)
 btn_exporttwisty.grid(padx=5, pady=5)
 
-#lbl_exportres = Label(master=frm_export, text = " ")
-#lbl_exportres.grid(padx=5, pady=5)
-
 for i in range(frm_export.grid_size()[1]):
     frm_export.rowconfigure(i, weight=1)
 
@@ -689,11 +667,11 @@ frm_stat.rowconfigure(0, weight=1)
 lbl_importres = Label(master=frm_stat, text = " ")
 lbl_importres.grid(padx=5, pady=5)
 
-lbl_stat = Label(master=frm_stat, text="Total: 0 solves")
+lbl_stat = Label(master=frm_stat, text="Total: 0 solves", font=('none', 15, 'bold'))
 lbl_stat.grid(padx=5, pady=5)
 
-lbl_pad = Label(master=frm_stat, text = " ")
-lbl_pad.grid(padx=5, pady=5)
+lbl_stat2 = Label(master=frm_stat, text = " ")
+lbl_stat2.grid(padx=5, pady=5)
 
 ########################################################
 
@@ -703,9 +681,6 @@ frm_exportstat.columnconfigure(0, weight=1)
 
 btn_exportstat = Button(master = frm_exportstat, text = "Export CSV (incl. averages)", command = cmd_exportstat)
 btn_exportstat.grid(padx=5, pady=5)
-
-#lbl_exportstatres = Label(master = frm_exportstat, text = " ")
-#lbl_exportstatres.grid(padx=5, pady=5)
 
 ##############################
 
